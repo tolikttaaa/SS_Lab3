@@ -35,6 +35,10 @@
         });
       }
 
+      window.onload = function () {
+        setConnected(false);
+      }
+
       function disconnect() {
         stompClient.disconnect();
         setConnected(false);
@@ -43,7 +47,7 @@
 
       function sendName() {
         var name = document.getElementById('name').value;
-        stompClient.send("/app/hello", {}, JSON.stringify({ 'name': name }));
+        stompClient.send("/app/mode", {}, JSON.stringify({ 'message': name }));
       }
 
       function showGreeting(message) {

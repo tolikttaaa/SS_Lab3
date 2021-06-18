@@ -1,29 +1,26 @@
 package com.ifmo.ttaaa.ss_lab3.controller;
 
-import com.ifmo.ttaaa.ss_lab3.hello.Greeting;
-import com.ifmo.ttaaa.ss_lab3.hello.HelloMessage;
+import com.ifmo.ttaaa.ss_lab3.message.ListModeAnswer;
+import com.ifmo.ttaaa.ss_lab3.message.ScriptModeStartAnswer;
+import com.ifmo.ttaaa.ss_lab3.message.ScriptModeStartMessage;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
 @Controller
 public class GreetingController {
-//    @MessageMapping("/hello")
-//    @SendTo("/topic/greetings")
-//    public Greeting greeting(HelloMessage message) throws Exception {
-//        Thread.sleep(3000); // simulated delay
-//        System.err.println(message.getName());
-//        return new Greeting("Hello, " + message.getName() + "!");
-//    }
-
-    @MessageMapping("/hello")
+    @MessageMapping("/list_mode")
     @SendToUser("/queue/reply")
-    public Greeting processMessageFromClient(HelloMessage message) throws Exception {
-        Thread.sleep(3000); // simulated delay
-        System.err.println(message.getName());
-        return new Greeting("Hello, " + message.getName() + "!");
+    public ListModeAnswer processMessageFromClient() throws Exception {
+        return new ListModeAnswer();
+    }
+
+    @MessageMapping("/script_mode")
+    @SendToUser("/queue/reply")
+    public ScriptModeStartAnswer processMessageFromClient(ScriptModeStartMessage inputMessage) throws Exception {
+        System.err.println(inputMessage.getDeviceName());
+        return new ScriptModeStartAnswer(inputMessage.getDeviceName());
     }
 
     @MessageExceptionHandler
