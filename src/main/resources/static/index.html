@@ -6,27 +6,24 @@
     <script src="sockjs.js"></script>
     <script src="stomp.js"></script>
     <script type="text/javascript">
-      var stompClient = null;
-      var password = null;
-      var id = null;
+      let stompClient = null;
+      let clientPassword = null;
+      let clientID = null;
 
       function setConnected(connected) {
         document.getElementById('connect').disabled = connected;
         document.getElementById('disconnect').disabled = !connected;
-        document.getElementById('startConversationDiv').style.visibility = connected ? 'visible' : 'hidden';
-        document.getElementById('scriptConversationDiv').style.visibility = connected ? 'visible' : 'hidden';
         document.getElementById('conversationDiv').style.visibility = connected ? 'visible' : 'hidden';
-        document.getElementById('response').innerHTML = '';
+        clearResponseList();
       }
 
       function setScriptConversationMode(isScriptMode) {
-        document.getElementById('startConversationDiv').style.visibility = !isScriptMode ? 'visible' : 'hidden';
         document.getElementById('scriptConversationDiv').style.visibility = isScriptMode ? 'visible' : 'hidden';
-        document.getElementById('response').innerHTML = '';
+        clearResponseList();
       }
 
       function connect() {
-        var socket = new SockJS('/greeting');
+        let socket = new SockJS('/greeting');
         stompClient = Stomp.over(socket);
         stompClient.connect({}, function(frame) {
           setConnected(true);
@@ -42,16 +39,20 @@
         });
       }
 
-      // window.onload = function () {
-      //   setScriptConversationMode(false);
-      //   setConnected(false);
-      // }
+      window.onload = function () {
+        setScriptConversationMode(false);
+        setConnected(false);
+      }
 
       function disconnect() {
         stompClient.disconnect();
         setConnected(false);
         // sendEndCommand();
         console.log("Disconnected");
+      }
+
+      function clearResponseList() {
+        document.getElementById('response').innerHTML = '';
       }
 
       function sendListModeRequest() {
@@ -64,16 +65,16 @@
       }
 
       function showMessage(message) {
-        var response = document.getElementById('response');
-        var p = document.createElement('p');
+        let response = document.getElementById('response');
+        let p = document.createElement('p');
         p.style.wordWrap = 'break-word';
         p.appendChild(document.createTextNode(message));
         response.appendChild(p);
       }
 
       function showErrorMessage(message) {
-        var response = document.getElementById('response');
-        var p = document.createElement('p');
+        let response = document.getElementById('response');
+        let p = document.createElement('p');
         p.style.wordWrap = 'break-word';
         p.style.color = 'red';
         p.appendChild(document.createTextNode(message));
@@ -89,7 +90,8 @@
     <div>
       <div>
         <button id="connect" onclick="connect();">Connect</button>
-        <button id="disconnect" disabled="disabled" onclick="disconnect();">Disconnect</button>
+        <button id="disconnect" onclick="disconnect();">Disconnect</button>
+        <button id="clear" onclick="clearResponseList();">Clear</button>
       </div>
 
       <div id="conversationDiv">
@@ -100,7 +102,7 @@
           </p>
           <p>
             <label>Script mode request</label>
-            <input type="text" id="deviceName" placeholder="device name"/>
+            <label for="deviceName"></label><input type="text" id="deviceName" placeholder="device name"/>
             <button id="scriptModeStartRequest" onclick="sendScriptModeStartRequest();">Send</button>
           </p>
         </div>
@@ -132,8 +134,10 @@
             <label for="exitCommand">Exit command: </label>
             <button id="exitCommand" onclick="sendExitRequest();">exit</button>
           </p>
-          <!--TODO: scriptConversationDiv-->
         </div>
+        <p>
+          <label for="response">Response list: </label>
+        </p>
         <p id="response"></p>
       </div>
     </div>
