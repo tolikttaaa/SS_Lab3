@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>SS Lab3</title>
 
@@ -7,11 +7,21 @@
     <script src="stomp.js"></script>
     <script type="text/javascript">
       var stompClient = null;
+      var password = null;
+      var id = null;
 
       function setConnected(connected) {
         document.getElementById('connect').disabled = connected;
         document.getElementById('disconnect').disabled = !connected;
+        document.getElementById('startConversationDiv').style.visibility = connected ? 'visible' : 'hidden';
+        document.getElementById('scriptConversationDiv').style.visibility = connected ? 'visible' : 'hidden';
         document.getElementById('conversationDiv').style.visibility = connected ? 'visible' : 'hidden';
+        document.getElementById('response').innerHTML = '';
+      }
+
+      function setScriptConversationMode(isScriptMode) {
+        document.getElementById('startConversationDiv').style.visibility = !isScriptMode ? 'visible' : 'hidden';
+        document.getElementById('scriptConversationDiv').style.visibility = isScriptMode ? 'visible' : 'hidden';
         document.getElementById('response').innerHTML = '';
       }
 
@@ -21,39 +31,51 @@
         stompClient.connect({}, function(frame) {
           setConnected(true);
           console.log('Connected: ' + frame);
-          // stompClient.subscribe('/topic/greetings', function(greeting){
-          //   showGreeting(JSON.parse(greeting.body).content);
-          // });
 
-          stompClient.subscribe("/user/queue/errors", function(message) {
-            alert("Error " + message.body);
-          });
-
-          stompClient.subscribe("/user/queue/reply", function(message) {
-            showGreeting(JSON.parse(message.body).content);
+          stompClient.subscribe("/user/queue/list_mode_reply", function(message) {
+            if (JSON.parse(message.body).errorMessage !== 'null') {
+              showErrorMessage(JSON.parse(message.body).errorMessage);
+            } else {
+              showMessage(JSON.parse(message.body).list);
+            }
           });
         });
       }
 
-      window.onload = function () {
-        setConnected(false);
-      }
+      // window.onload = function () {
+      //   setScriptConversationMode(false);
+      //   setConnected(false);
+      // }
 
       function disconnect() {
         stompClient.disconnect();
         setConnected(false);
+        // sendEndCommand();
         console.log("Disconnected");
       }
 
-      function sendName() {
-        var name = document.getElementById('name').value;
-        stompClient.send("/app/mode", {}, JSON.stringify({ 'message': name }));
+      function sendListModeRequest() {
+        stompClient.send("/app/list_mode");
       }
 
-      function showGreeting(message) {
+      function sendScriptModeStartRequest() {
+        let deviceName = document.getElementById('deviceName').value;
+        stompClient.send("/app/script_mode_start", {}, JSON.stringify({ 'deviceName': deviceName}));
+      }
+
+      function showMessage(message) {
         var response = document.getElementById('response');
         var p = document.createElement('p');
         p.style.wordWrap = 'break-word';
+        p.appendChild(document.createTextNode(message));
+        response.appendChild(p);
+      }
+
+      function showErrorMessage(message) {
+        var response = document.getElementById('response');
+        var p = document.createElement('p');
+        p.style.wordWrap = 'break-word';
+        p.style.color = 'red';
         p.appendChild(document.createTextNode(message));
         response.appendChild(p);
       }
@@ -69,9 +91,49 @@
         <button id="connect" onclick="connect();">Connect</button>
         <button id="disconnect" disabled="disabled" onclick="disconnect();">Disconnect</button>
       </div>
+
       <div id="conversationDiv">
-        <label>What is your name?</label><input type="text" id="name" />
-        <button id="sendName" onclick="sendName();">Send</button>
+        <div id="startConversationDiv">
+          <p>
+            <label>List mode request</label>
+            <button id="listRequest" onclick="sendListModeRequest();">Send</button>
+          </p>
+          <p>
+            <label>Script mode request</label>
+            <input type="text" id="deviceName" placeholder="device name"/>
+            <button id="scriptModeStartRequest" onclick="sendScriptModeStartRequest();">Send</button>
+          </p>
+        </div>
+        <div id="scriptConversationDiv">
+          <p>
+            <label for="helpCommand">Help command: </label>
+            <button id="helpCommand" onclick="sendHelpRequest();">help</button>
+          </p>
+          <p>
+            <label for="lsCommand">Ls command: </label>
+            <button id="lsCommand" onclick="sendLsRequest();">ls</button>
+          </p>
+          <p>
+            <label for="pwdCommand">Pwd command: </label>
+            <button id="pwdCommand" onclick="sendPwdRequest();">pwd</button>
+          </p>
+          <p>
+            <label for="cdCommand">Cd command: </label>
+            <button id="cdCommand" onclick="sendCdRequest();">cd</button>
+            <label for="cdArg1">Arg1 </label><input type="text" id="cdArg1" placeholder="to"/>
+          </p>
+          <p>
+            <label for="cpCommand">Cp command: </label>
+            <button id="cpCommand" onclick="sendCpRequest();">cp</button>
+            <label for="cpArg1">Arg1 </label><input type="text" id="cpArg1" placeholder="from"/>
+            <label for="cpArg2">Arg2 </label><input type="text" id="cpArg2" placeholder="to"/>
+          </p>
+          <p>
+            <label for="exitCommand">Exit command: </label>
+            <button id="exitCommand" onclick="sendExitRequest();">exit</button>
+          </p>
+          <!--TODO: scriptConversationDiv-->
+        </div>
         <p id="response"></p>
       </div>
     </div>
