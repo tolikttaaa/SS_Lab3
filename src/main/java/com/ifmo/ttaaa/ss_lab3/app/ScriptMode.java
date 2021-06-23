@@ -124,7 +124,6 @@ public class ScriptMode {
     }
 
     public static long register(String path) {
-        System.err.println("Java path: " + path);
         return scriptModeLib.getPartition(path);
     }
 
