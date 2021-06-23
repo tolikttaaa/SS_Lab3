@@ -12,6 +12,8 @@ public class ScriptMode {
     private static final Map<Integer, Long> partPointer = new HashMap<>();
     private static final Map<Integer, String> curPath = new HashMap<>();
 
+    private static int curNum = 0;
+
     private static final ScriptModeLib scriptModeLib = new ScriptModeLib();
 
     public static String getCurPath(int id, String password) throws IllegalPasswordException {
@@ -19,16 +21,32 @@ public class ScriptMode {
         return curPath.get(id);
     }
 
-    public static String registerSession(int id, String password, String deviceName) {
+    public static String registerSessionByDeviceName(int id, String password, String deviceName) {
         String response;
-        long pointer = register(deviceName);
+        long pointer = register("/dev/" + deviceName);
 
         if (pointer == 0) {
-            throw new Fat32NotSupportedException(deviceName);
+            throw new Fat32NotSupportedException("/dev/" + deviceName);
         }
         response = "FAT32 supported!!!";
         sessionPassword.put(id, password);
         curPath.put(id, deviceName);
+        partPointer.put(id, pointer);
+
+        return response;
+    }
+
+    public static String registerSessionByPath(int id, String password, String path) {
+        String response;
+        long pointer = register(path);
+
+        if (pointer == 0) {
+            throw new Fat32NotSupportedException(path);
+        }
+
+        response = "FAT32 supported!!!";
+        sessionPassword.put(id, password);
+        curPath.put(id, path.substring(path.lastIndexOf('/')));
         partPointer.put(id, pointer);
 
         return response;
@@ -105,8 +123,9 @@ public class ScriptMode {
         }
     }
 
-    public static long register(String deviceName) {
-        return scriptModeLib.getPartition(deviceName);
+    public static long register(String path) {
+        System.err.println("Java path: " + path);
+        return scriptModeLib.getPartition(path);
     }
 
     private static String substringUntil(String path, char c) {
@@ -117,5 +136,9 @@ public class ScriptMode {
         }
 
         return "";
+    }
+
+    public static int getCurNum() {
+        return curNum++;
     }
 }

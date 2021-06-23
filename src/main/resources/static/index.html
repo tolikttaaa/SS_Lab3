@@ -47,22 +47,7 @@
           });
 
           stompClient.subscribe("/user/queue/script_mode_start_reply", function(message) {
-            if (JSON.parse(message.body).errorMessage !== null) {
-              showErrorMessage(JSON.parse(message.body).errorMessage);
-            } else {
-              clientID = JSON.parse(message.body).id;
-              clientPassword = JSON.parse(message.body).secretPassword;
-              curPath = JSON.parse(message.body).startPath;
-
-              showMessage(JSON.parse(message.body).response);
-
-              console.log(clientID);
-              console.log(clientPassword);
-              console.log(curPath);
-
-              setScriptConversationMode(true);
-              setCurrentPath();
-            }
+            processScriptModeStartReply(message.body);
           });
 
           stompClient.subscribe("/user/queue/script_mode_reply", function(message) {
@@ -82,6 +67,7 @@
 
       window.onload = function () {
         setConnected(false);
+        attachFormSubmitEvent();
       }
 
       function setCurrentPath() {
@@ -173,6 +159,47 @@
         pResponse.appendChild(p);
         response.appendChild(pResponse);
       }
+
+      function uploadFormSubmit(event) {
+        let url = "/upload";
+        let request = new XMLHttpRequest();
+        request.open('POST', url, true);
+        request.onload = function() {
+          console.log(request.responseText);
+          let message = request.responseText;
+          processScriptModeStartReply(message);
+        };
+
+        request.onerror = function() {
+          showErrorMessage("Failed to upload!!!")
+        };
+
+        request.send(new FormData(event.target));
+        event.preventDefault();
+      }
+
+      function attachFormSubmitEvent() {
+        document.getElementById('uploadFileForm').addEventListener("submit", uploadFormSubmit);
+      }
+
+      function processScriptModeStartReply(message) {
+        if (JSON.parse(message).errorMessage !== null) {
+          showErrorMessage(JSON.parse(message).errorMessage);
+        } else {
+          clientID = JSON.parse(message).id;
+          clientPassword = JSON.parse(message).secretPassword;
+          curPath = JSON.parse(message).startPath;
+
+          showMessage(JSON.parse(message).response);
+
+          console.log(clientID);
+          console.log(clientPassword);
+          console.log(curPath);
+
+          setScriptConversationMode(true);
+          setCurrentPath();
+        }
+      }
     </script>
   </head>
   <body>
@@ -199,11 +226,9 @@
             <button id="scriptModeStartRequest" onclick="sendScriptModeStartRequest();">Send</button>
           </p>
           <p>
-            <form method="POST" enctype="multipart/form-data" action="/upload">
+            <form method="POST" enctype="multipart/form-data" action="/upload" id="uploadFileForm">
               File to upload: <input type="file" name="file"> <br/>
-              Name: <input type="text" name="name"> <br/> <br/>
-              <input type="hidden" name="clientId" id="uploadFileClientId"/>
-              <input type="hidden" name="clientPassword" id="uploadFileClientPassword"/>
+              File name: <input type="text" name="name"/> <br/> <br/>
               <input type="submit" value="Upload"/> Press here to upload the file!
             </form>
           </p>

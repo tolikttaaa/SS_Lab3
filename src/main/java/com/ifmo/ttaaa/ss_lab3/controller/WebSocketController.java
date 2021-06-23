@@ -16,7 +16,7 @@ public class WebSocketController {
     @MessageMapping("/script_mode_start")
     @SendToUser("/queue/script_mode_start_reply")
     public ScriptModeStartAnswer processMessageFromClient(ScriptModeStartMessage inputMessage) throws Exception {
-        return new ScriptModeStartAnswer(inputMessage.getDeviceName());
+        return ScriptModeStartAnswer.scriptModeStartAnswerByDeviceName(inputMessage.getDeviceName());
     }
 
     @MessageMapping("/script_mode_help")
