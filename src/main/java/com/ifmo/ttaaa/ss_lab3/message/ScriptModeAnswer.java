@@ -19,17 +19,18 @@ public class ScriptModeAnswer {
 
         try {
             response = ScriptMode.helpCommand(id, password);
-        } catch (Exception e) {
-            System.err.printf(
+        } catch (Throwable e) {
+            errorMessage = String.format(
                     """
                     Exception in method: "ScriptMode.helpCommand"
                     with arguments: id=%d, password="%s"
+                    %s
                     """,
                     id,
-                    password
+                    password,
+                    e.getMessage()
             );
-            System.err.println(e.getMessage());
-            errorMessage = e.getMessage();
+            System.err.println(errorMessage);
         }
 
         return new ScriptModeAnswer(errorMessage, response, curPath);
@@ -41,17 +42,18 @@ public class ScriptModeAnswer {
 
         try {
             response = ScriptMode.lsCommand(id, password);
-        } catch (Exception e) {
-            System.err.printf(
+        } catch (Throwable e) {
+            errorMessage = String.format(
                     """
                     Exception in method: "ScriptMode.lsCommand"
                     with arguments: id=%d, password="%s"
+                    %s
                     """,
                     id,
-                    password
+                    password,
+                    e.getMessage()
             );
-            System.err.println(e.getMessage());
-            errorMessage = e.getMessage();
+            System.err.println(errorMessage);
         }
 
         return new ScriptModeAnswer(errorMessage, response, curPath);
@@ -63,17 +65,18 @@ public class ScriptModeAnswer {
 
         try {
             response = ScriptMode.pwdCommand(id, password);
-        } catch (Exception e) {
-            System.err.printf(
+        } catch (Throwable e) {
+            errorMessage = String.format(
                     """
                     Exception in method: "ScriptMode.pwdCommand"
                     with arguments: id=%d, password="%s"
+                    %s
                     """,
                     id,
-                    password
+                    password,
+                    e.getMessage()
             );
-            System.err.println(e.getMessage());
-            errorMessage = e.getMessage();
+            System.err.println(errorMessage);
         }
 
         return new ScriptModeAnswer(errorMessage, response, curPath);
@@ -84,18 +87,20 @@ public class ScriptModeAnswer {
         String errorMessage = null;
 
         try {
-            response = ScriptMode.exitCommand(id, password);
-        } catch (Exception e) {
-            System.err.printf(
+            ScriptMode.exitCommand(id, password);
+            response = "Successfully exit!";
+        } catch (Throwable e) {
+            errorMessage = String.format(
                     """
                     Exception in method: "ScriptMode.exitCommand"
                     with arguments: id=%d, password="%s"
+                    %s
                     """,
                     id,
-                    password
+                    password,
+                    e.getMessage()
             );
-            System.err.println(e.getMessage());
-            errorMessage = e.getMessage();
+            System.err.println(errorMessage);
         }
 
         return new ScriptModeAnswer(errorMessage, response, null);
@@ -109,18 +114,19 @@ public class ScriptModeAnswer {
         try {
             response = ScriptMode.cdCommand(id, password, to);
             path = ScriptMode.getCurPath(id, password);
-        } catch (Exception e) {
-            System.err.printf(
+        } catch (Throwable e) {
+            errorMessage = String.format(
                     """
-                    Exception in method: "ScriptMode.cdCommand"
+                    Exception in method: "ScriptMode.lsCommand"
                     with arguments: id=%d, password="%s", to="%s"
+                    %s
                     """,
                     id,
                     password,
-                    to
+                    to,
+                    e.getMessage()
             );
-            System.err.println(e.getMessage());
-            errorMessage = e.getMessage();
+            System.err.println(errorMessage);
         }
 
         return new ScriptModeAnswer(errorMessage, response, path);
@@ -132,19 +138,20 @@ public class ScriptModeAnswer {
 
         try {
             response = ScriptMode.cpCommand(id, password, from, to);
-        } catch (Exception e) {
-            System.err.printf(
+        } catch (Throwable e) {
+            errorMessage = String.format(
                     """
-                    Exception in method: "ScriptMode.cpCommand"
+                    Exception in method: "ScriptMode.lsCommand"
                     with arguments: id=%d, password="%s", from="%s", to="%s"
+                    %s
                     """,
                     id,
                     password,
                     from,
-                    to
+                    to,
+                    e.getMessage()
             );
-            System.err.println(e.getMessage());
-            errorMessage = e.getMessage();
+            System.err.println(errorMessage);
         }
 
         return new ScriptModeAnswer(errorMessage, response, curPath);

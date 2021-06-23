@@ -7,6 +7,7 @@ public class ScriptModeStartAnswer {
     private String secretPassword;
     private int id;
     private String errorMessage;
+    private String response;
     private String startPath;
 
     private static int curNum = 0;
@@ -18,22 +19,26 @@ public class ScriptModeStartAnswer {
                                                         .useUpper(true)
                                                         .build()
                                                     .generate(10);
+        this.errorMessage = null;
+        this.response = null;
+        this.startPath = null;
+
         try {
-            this.startPath = ScriptMode.registerSession(id, secretPassword, deviceName);
-            this.errorMessage = null;
-        } catch (Exception e) {
-            System.err.printf(
+            this.response = ScriptMode.registerSession(id, secretPassword, deviceName);
+            this.startPath = ScriptMode.getCurPath(id, secretPassword);
+        } catch (Throwable e) {
+            this.errorMessage = String.format(
                     """
                     Exception in method: "ScriptMode.registerSession"
                     with arguments: id=%d, password="%s", deviceName="%s"
+                    %s
                     """,
                     id,
                     secretPassword,
-                    deviceName
+                    deviceName,
+                    e.getMessage()
             );
-            System.err.println(e.getMessage());
-            this.errorMessage = e.getMessage();
-            this.startPath = null;
+            System.err.println(errorMessage);
         }
     }
 
@@ -51,6 +56,10 @@ public class ScriptModeStartAnswer {
 
     public int getId() {
         return id;
+    }
+
+    public String getResponse() {
+        return response;
     }
 }
 

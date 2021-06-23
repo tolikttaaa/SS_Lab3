@@ -10,14 +10,15 @@ public class ListModeAnswer {
         try {
             this.list = ListMode.getList();
             this.errorMessage = null;
-        } catch (Exception e) {
-           System.err.println(
-                    """
-                    Exception in method: "ListMode.getList"
-                    """
+        } catch (Throwable e) {
+            this.errorMessage = String.format(
+                 """
+                 Exception in method: "ListMode.getList"
+                 %s
+                 """,
+                 e.getMessage()
             );
-            System.err.println(e.getMessage());
-            this.errorMessage = e.getMessage();
+            System.err.println(errorMessage);
             this.list = null;
         }
     }

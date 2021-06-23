@@ -54,6 +54,8 @@
               clientPassword = JSON.parse(message.body).secretPassword;
               curPath = JSON.parse(message.body).startPath;
 
+              showMessage(JSON.parse(message.body).response);
+
               console.log(clientID);
               console.log(clientPassword);
               console.log(curPath);
