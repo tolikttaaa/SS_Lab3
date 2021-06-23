@@ -9,16 +9,25 @@
       let stompClient = null;
       let clientPassword = null;
       let clientID = null;
+      let curPath = null;
 
       function setConnected(connected) {
         document.getElementById('connect').disabled = connected;
         document.getElementById('disconnect').disabled = !connected;
         document.getElementById('conversationDiv').style.visibility = connected ? 'visible' : 'hidden';
+        document.getElementById('startConversationDiv').style.visibility = connected ? 'visible' : 'hidden';
+        document.getElementById('scriptConversationDiv').style.visibility = connected ? 'visible' : 'hidden';
+
+        if (connected) {
+          setScriptConversationMode(false);
+        }
+
         clearResponseList();
       }
 
       function setScriptConversationMode(isScriptMode) {
         document.getElementById('scriptConversationDiv').style.visibility = isScriptMode ? 'visible' : 'hidden';
+        document.getElementById('startConversationDiv').style.visibility = !isScriptMode ? 'visible' : 'hidden';
         clearResponseList();
       }
 
@@ -30,24 +39,61 @@
           console.log('Connected: ' + frame);
 
           stompClient.subscribe("/user/queue/list_mode_reply", function(message) {
-            if (JSON.parse(message.body).errorMessage !== 'null') {
+            if (JSON.parse(message.body).errorMessage !== null) {
               showErrorMessage(JSON.parse(message.body).errorMessage);
             } else {
               showMessage(JSON.parse(message.body).list);
+            }
+          });
+
+          stompClient.subscribe("/user/queue/script_mode_start_reply", function(message) {
+            if (JSON.parse(message.body).errorMessage !== null) {
+              showErrorMessage(JSON.parse(message.body).errorMessage);
+            } else {
+              clientID = JSON.parse(message.body).id;
+              clientPassword = JSON.parse(message.body).secretPassword;
+              curPath = JSON.parse(message.body).startPath;
+
+              console.log(clientID);
+              console.log(clientPassword);
+              console.log(curPath);
+
+              setScriptConversationMode(true);
+              setCurrentPath();
+            }
+          });
+
+          stompClient.subscribe("/user/queue/script_mode_reply", function(message) {
+            if (JSON.parse(message.body).errorMessage !== null) {
+              showErrorMessage(JSON.parse(message.body).errorMessage);
+            } else {
+              curPath = JSON.parse(message.body).path;
+
+              console.log(curPath);
+
+              showMessage(JSON.parse(message.body).response);
+              setCurrentPath();
             }
           });
         });
       }
 
       window.onload = function () {
-        setScriptConversationMode(false);
         setConnected(false);
       }
 
+      function setCurrentPath() {
+        document.getElementById('curPath').innerHTML = curPath;
+      }
+
       function disconnect() {
+        if (clientID !== null && clientPassword !== null) {
+          sendExitRequest();
+        }
+
         stompClient.disconnect();
         setConnected(false);
-        // sendEndCommand();
+
         console.log("Disconnected");
       }
 
@@ -61,7 +107,44 @@
 
       function sendScriptModeStartRequest() {
         let deviceName = document.getElementById('deviceName').value;
-        stompClient.send("/app/script_mode_start", {}, JSON.stringify({ 'deviceName': deviceName}));
+        stompClient.send("/app/script_mode_start", {}, JSON.stringify({ 'deviceName': deviceName }));
+      }
+
+      function sendHelpRequest() {
+        stompClient.send("/app/script_mode_help", {}, JSON.stringify({ 'id': clientID, 'password': clientPassword, 'curPath': curPath }));
+      }
+
+      function sendLsRequest() {
+        stompClient.send("/app/script_mode_ls", {}, JSON.stringify({ 'id': clientID, 'password': clientPassword, 'curPath': curPath }));
+      }
+
+      function sendPwdRequest() {
+        stompClient.send("/app/script_mode_pwd", {}, JSON.stringify({ 'id': clientID, 'password': clientPassword, 'curPath': curPath }));
+      }
+
+      function sendExitRequest() {
+        stompClient.send("/app/script_mode_exit", {}, JSON.stringify({ 'id': clientID, 'password': clientPassword, 'curPath': curPath }));
+
+        clientID = null;
+        clientPassword = null;
+        curPath = null;
+
+        setScriptConversationMode(false);
+      }
+
+      function sendCdRequest() {
+        let to = document.getElementById('cdArg1').value;
+        stompClient.send("/app/script_mode_cd", {}, JSON.stringify(
+                  { 'id': clientID, 'password': clientPassword, 'to': to, 'curPath': curPath }
+                ));
+      }
+
+      function sendCpRequest() {
+        let from = document.getElementById('cpArg1').value;
+        let to = document.getElementById('cpArg2').value;
+        stompClient.send("/app/script_mode_cp", {}, JSON.stringify(
+                  { 'id': clientID, 'password': clientPassword, 'from': from, 'to': to, 'curPath': curPath }
+                ));
       }
 
       function showMessage(message) {
@@ -133,6 +216,10 @@
           <p>
             <label for="exitCommand">Exit command: </label>
             <button id="exitCommand" onclick="sendExitRequest();">exit</button>
+          </p>
+          <p>
+            <label for="curPath">Current path: </label>
+            <label id="curPath"></label>
           </p>
         </div>
         <p>

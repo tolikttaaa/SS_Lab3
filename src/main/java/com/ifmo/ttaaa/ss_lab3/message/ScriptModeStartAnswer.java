@@ -20,7 +20,7 @@ public class ScriptModeStartAnswer {
                                                     .generate(10);
         try {
             this.startPath = ScriptMode.registerSession(id, secretPassword, deviceName);
-            this.errorMessage = "null";
+            this.errorMessage = null;
         } catch (Exception e) {
             System.err.printf(
                     """
@@ -33,7 +33,7 @@ public class ScriptModeStartAnswer {
             );
             System.err.println(e.getMessage());
             this.errorMessage = e.getMessage();
-            this.startPath = "null";
+            this.startPath = null;
         }
     }
 

@@ -9,7 +9,7 @@ public class ListModeAnswer {
     public ListModeAnswer() {
         try {
             this.list = ListMode.getList();
-            this.errorMessage = "null";
+            this.errorMessage = null;
         } catch (Exception e) {
            System.err.println(
                     """
@@ -18,7 +18,7 @@ public class ListModeAnswer {
             );
             System.err.println(e.getMessage());
             this.errorMessage = e.getMessage();
-            this.list = "null";
+            this.list = null;
         }
     }
 
