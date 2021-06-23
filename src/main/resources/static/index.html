@@ -150,20 +150,28 @@
       }
 
       function showMessage(message) {
+        clearResponseList();
         let response = document.getElementById('response');
-        let p = document.createElement('p');
+        let pResponse = document.createElement('p');
+        let p = document.createElement('label');
         p.style.wordWrap = 'break-word';
+        p.style.whiteSpace = 'pre-wrap';
         p.appendChild(document.createTextNode(message));
-        response.appendChild(p);
+        pResponse.appendChild(p);
+        response.appendChild(pResponse);
       }
 
       function showErrorMessage(message) {
+        clearResponseList();
         let response = document.getElementById('response');
-        let p = document.createElement('p');
+        let pResponse = document.createElement('p');
+        let p = document.createElement('label');
         p.style.wordWrap = 'break-word';
+        p.style.whiteSpace = 'pre-wrap';
         p.style.color = 'red';
         p.appendChild(document.createTextNode(message));
-        response.appendChild(p);
+        pResponse.appendChild(p);
+        response.appendChild(pResponse);
       }
     </script>
   </head>
@@ -189,6 +197,15 @@
             <label>Script mode request</label>
             <label for="deviceName"></label><input type="text" id="deviceName" placeholder="device name"/>
             <button id="scriptModeStartRequest" onclick="sendScriptModeStartRequest();">Send</button>
+          </p>
+          <p>
+            <form method="POST" enctype="multipart/form-data" action="/upload">
+              File to upload: <input type="file" name="file"> <br/>
+              Name: <input type="text" name="name"> <br/> <br/>
+              <input type="hidden" name="clientId" id="uploadFileClientId"/>
+              <input type="hidden" name="clientPassword" id="uploadFileClientPassword"/>
+              <input type="submit" value="Upload"/> Press here to upload the file!
+            </form>
           </p>
         </div>
         <div id="scriptConversationDiv">

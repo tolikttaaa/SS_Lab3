@@ -9,22 +9,27 @@ import java.util.Map;
 
 public class ScriptMode {
     private static final Map<Integer, String> sessionPassword = new HashMap<>();
-    private static final Map<Integer, String> currentPath = new HashMap<>();
-    private static final Map<Integer, String> targets = new HashMap<>();
+    private static final Map<Integer, Long> partPointer = new HashMap<>();
+    private static final Map<Integer, String> curPath = new HashMap<>();
 
     private static final ScriptModeLib scriptModeLib = new ScriptModeLib();
 
     public static String getCurPath(int id, String password) throws IllegalPasswordException {
         checkPassword(id, password);
-        return targets.get(id) + currentPath.get(id);
+        return curPath.get(id);
     }
 
     public static String registerSession(int id, String password, String deviceName) {
-        String response = checkConnection(deviceName);
+        String response;
+        long pointer = register(deviceName);
 
+        if (pointer == 0) {
+            throw new Fat32NotSupportedException(deviceName);
+        }
+        response = "FAT32 supported!!!";
         sessionPassword.put(id, password);
-        targets.put(id, deviceName);
-        currentPath.put(id, "");
+        curPath.put(id, deviceName);
+        partPointer.put(id, pointer);
 
         return response;
     }
@@ -37,21 +42,19 @@ public class ScriptMode {
 
     public static String lsCommand(int id, String password) throws IllegalPasswordException {
         checkPassword(id, password);
-
-        return scriptModeLib.lsCommand(getCurPath(id, password));
+        return scriptModeLib.lsCommand(partPointer.get(id));
     }
 
     public static String pwdCommand(int id, String password) throws IllegalPasswordException {
         checkPassword(id, password);
-
         return getCurPath(id, password);
     }
 
     public static void exitCommand(int id, String password) throws IllegalPasswordException {
         checkPassword(id, password);
 
-        currentPath.remove(id);
-        targets.remove(id);
+        scriptModeLib.exitCommand(partPointer.get(id));
+        partPointer.remove(id);
         sessionPassword.remove(id);
     }
 
@@ -60,22 +63,22 @@ public class ScriptMode {
 
         String response;
 
-        if (scriptModeLib.cdCommand(getCurPath(id, password), to) == 1) {
+        if (scriptModeLib.cdCommand(partPointer.get(id), to) == 0) {
             throw new DirNotFoundException("Cd failed!", to, getCurPath(id, password));
-        } else {
-            response = """
-                       Cd successfully!
-                       """;
-            switch (to) {
-                case "..":
-                    currentPath.put(id, substringUntil(getCurPath(id, password), '/'));
-                    break;
-                case ".":
-                    break;
-                default:
-                    currentPath.put(id, getCurPath(id, password) + "/" + to);
-                    break;
-            }
+        }
+
+        response = """
+                   Cd successfully!
+                   """;
+        switch (to) {
+            case "..":
+                curPath.put(id, substringUntil(getCurPath(id, password), '/'));
+                break;
+            case ".":
+                break;
+            default:
+                curPath.put(id, getCurPath(id, password) + "/" + to);
+                break;
         }
 
         return response;
@@ -86,7 +89,7 @@ public class ScriptMode {
 
         String response;
 
-        switch (scriptModeLib.cpCommand(getCurPath(id, password), from, to)) {
+        switch (scriptModeLib.cpCommand(partPointer.get(id), from, to)) {
             case 0 -> response = "Cp successfully!";
             case 1 -> throw new DirNotFoundException("Cp failed!", from, getCurPath(id, password));
             case 2 -> throw new DirNotFoundException("Cp failed!", to, getCurPath(id, password));
@@ -102,11 +105,8 @@ public class ScriptMode {
         }
     }
 
-    public static String checkConnection(String path) {
-        if (scriptModeLib.getPartition(path) == 0) {
-            return "FAT32 supported!";
-        }
-        throw new Fat32NotSupportedException(path);
+    public static long register(String deviceName) {
+        return scriptModeLib.getPartition(deviceName);
     }
 
     private static String substringUntil(String path, char c) {

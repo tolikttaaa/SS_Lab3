@@ -11,6 +11,7 @@ public class ListModeAnswer {
             this.list = ListMode.getList();
             this.errorMessage = null;
         } catch (Throwable e) {
+            e.printStackTrace();
             this.errorMessage = String.format(
                  """
                  Exception in method: "ListMode.getList"
