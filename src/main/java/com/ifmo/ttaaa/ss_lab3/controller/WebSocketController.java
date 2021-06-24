@@ -2,8 +2,12 @@ package com.ifmo.ttaaa.ss_lab3.controller;
 
 import com.ifmo.ttaaa.ss_lab3.message.*;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.context.annotation.SessionScope;
+
+import javax.servlet.http.HttpSession;
 
 @Controller
 public class WebSocketController {
@@ -30,12 +34,11 @@ public class WebSocketController {
     }
 
     @MessageMapping("/script_mode_ls")
-    @SendToUser("/queue/script_mode_reply")
-    public ScriptModeAnswer processMessageFromClient(ScriptModeLsMessage inputMessage) throws Exception {
-        return ScriptModeAnswer.ScriptModeAnswerLs(
+    @SendToUser("/queue/script_mode_ls_reply")
+    public ScriptModeLsAnswer processMessageFromClient(ScriptModeLsMessage inputMessage) throws Exception {
+        return ScriptModeLsAnswer.ScriptModeAnswerLs(
                 inputMessage.getId(),
-                inputMessage.getPassword(),
-                inputMessage.getCurPath()
+                inputMessage.getPassword()
         );
     }
 

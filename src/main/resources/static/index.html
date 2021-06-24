@@ -50,6 +50,14 @@
             processScriptModeStartReply(message.body);
           });
 
+          stompClient.subscribe("/user/queue/script_mode_ls_reply", function(message) {
+            if (JSON.parse(message.body).errorMessage !== null) {
+              showErrorMessage(JSON.parse(message.body).errorMessage);
+            } else {
+              showLsMessage(JSON.parse(JSON.parse(message.body).response));
+            }
+          });
+
           stompClient.subscribe("/user/queue/script_mode_reply", function(message) {
             if (JSON.parse(message.body).errorMessage !== null) {
               showErrorMessage(JSON.parse(message.body).errorMessage);
@@ -70,8 +78,19 @@
         attachFormSubmitEvent();
       }
 
+      function sendDownloadRequest(name) {
+        let data = new FormData();
+        data.append('id', clientID);
+        data.append('password', clientPassword);
+        data.append('name', name);
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', '/download', true);
+        xhr.send(data);
+      }
+
       function setCurrentPath() {
         document.getElementById('curPath').innerHTML = curPath;
+        sendLsRequest();
       }
 
       function disconnect() {
@@ -87,6 +106,10 @@
 
       function clearResponseList() {
         document.getElementById('response').innerHTML = '';
+      }
+
+      function clearLsResponseList() {
+        document.getElementById('lsResponse').innerHTML = '';
       }
 
       function sendListModeRequest() {
@@ -122,9 +145,13 @@
 
       function sendCdRequest() {
         let to = document.getElementById('cdArg1').value;
+        sendCdRequestTo(to);
+      }
+
+      function sendCdRequestTo(to) {
         stompClient.send("/app/script_mode_cd", {}, JSON.stringify(
-                  { 'id': clientID, 'password': clientPassword, 'to': to, 'curPath': curPath }
-                ));
+                { 'id': clientID, 'password': clientPassword, 'to': to, 'curPath': curPath }
+        ));
       }
 
       function sendCpRequest() {
@@ -145,6 +172,61 @@
         p.appendChild(document.createTextNode(message));
         pResponse.appendChild(p);
         response.appendChild(pResponse);
+      }
+
+      function showLsMessage(message) {
+        clearLsResponseList();
+        let response = document.getElementById('lsResponse');
+
+        message.forEach(function (item) {
+          let p = document.createElement('p');
+          let label = document.createElement('label');
+          label.appendChild(document.createTextNode(item.type + " "));
+          p.appendChild(label);
+
+          if (item.type === "DIR") {
+            let button = document.createElement('button');
+            button.appendChild(document.createTextNode(item.name));
+            button.onclick = function () {
+              sendCdRequestTo(item.name);
+            }
+            p.appendChild(button);
+          } else {
+            let form = document.createElement('form');
+            form.target = "_blank";
+            form.method = "POST";
+            form.enctype = "multipart/form-data";
+            form.action = "/download";
+
+            let idCur = document.createElement('input');
+            idCur.value = clientID;
+            idCur.type = "hidden";
+            idCur.name = "id";
+
+            let passCur = document.createElement('input');
+            passCur.value = clientPassword;
+            passCur.type = "hidden";
+            passCur.name = "password";
+
+            let nameCur = document.createElement('input');
+            nameCur.value = item.name;
+            nameCur.type = "hidden";
+            nameCur.name = "name";
+
+            let submit = document.createElement('input');
+            submit.value = item.name;
+            submit.type = "submit";
+
+            form.appendChild(idCur);
+            form.appendChild(passCur);
+            form.appendChild(nameCur);
+            form.appendChild(submit);
+
+            p.appendChild(form);
+          }
+
+          response.appendChild(p);
+        });
       }
 
       function showErrorMessage(message) {
@@ -189,6 +271,9 @@
           clientID = JSON.parse(message).id;
           clientPassword = JSON.parse(message).secretPassword;
           curPath = JSON.parse(message).startPath;
+
+          document.getElementById('downloadId').value = clientID;
+          document.getElementById('downloadPassword').value = clientPassword;
 
           showMessage(JSON.parse(message).response);
 
@@ -262,9 +347,18 @@
             <button id="exitCommand" onclick="sendExitRequest();">exit</button>
           </p>
           <p>
+          <form method="POST" enctype="multipart/form-data" action="/download" id="downloadFileForm" target="_blank">
+            File name: <input type="text" name="name"/>
+            <input type="hidden" name="id" id="downloadId"/>
+            <input type="hidden" name="password" id="downloadPassword"/>
+            <input type="submit" value="Download"/> Press here to download the file!
+          </form>
+          </p>
+          <p>
             <label for="curPath">Current path: </label>
             <label id="curPath"></label>
           </p>
+          <p id="lsResponse"></p>
         </div>
         <p>
           <label for="response">Response list: </label>
